@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Теплосчёт — калькулятор расхода газа котлом</title>
+<meta name="description" content="Калькулятор расхода газа котлом: сколько кубометров и рублей уйдёт на отопление дома за сезон с учётом климата вашего города.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+
+
+
+
+
+
+<style>
+/* Layout: интерфейс тепловизора — слева пульт с параметрами дома, справа живой ИК-снимок и итог; ниже сравнение топлива, открытая методика, вопросы */
+:root{
+  --bg:#08070e;
+  --panel:#110f1b;
+  --panel-2:#1a1729;
+  --line:#2a2540;
+  --ink:#f2edf8;
+  --muted:#9d96b4;
+  --hot:#ff8a2a;
+  --warm:#ffd34d;
+  --cold:#6d86ff;
+  --ir: linear-gradient(to top,#04020f 0%,#1e0a5c 18%,#6e148c 36%,#be1e6e 52%,#eb5a1e 66%,#ffa014 80%,#ffe15a 92%,#fffbe6 100%);
+  --f-display:'Unbounded','Arial Black',system-ui,sans-serif;
+  --f-body:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--f-mono)}
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:22px}
+.logo{font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:-.01em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 50% 60%,#fffbe6 0 12%,#ffe15a 22%,#ff8a2a 42%,#be1e6e 64%,#1e0a5c 86%);box-shadow:0 0 18px rgba(255,138,42,.55)}
+.logo b{font-weight:800}.logo span{color:var(--hot)}
+.top nav{display:flex;gap:22px;font-size:14px;color:var(--muted)}
+.top nav a{text-decoration:none}
+.top nav a:hover{color:var(--ink)}
+@media (max-width:640px){.top nav{display:none}}
+
+/* hero grid */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);grid-template-areas:"intro intro" "controls visual";gap:20px 28px;padding-block:8px 56px;align-items:start}
+.visual{grid-area:visual;display:flex;flex-direction:column;gap:20px;position:sticky;top:max(16px,env(safe-area-inset-top,0px))}
+.intro{grid-area:intro;max-width:860px;padding-block:18px 14px}
+.imager-wrap{grid-area:imager}
+.controls{grid-area:controls}
+.results{grid-area:results}
+@media (max-width:920px){.hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "imager" "controls" "results"}.visual{display:contents}}
+
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--hot);margin:0 0 18px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--hot);box-shadow:0 0 12px var(--hot);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(2rem,4.8vw,3.9rem);line-height:1.04;letter-spacing:-.025em;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:transparent;background:linear-gradient(92deg,var(--warm),var(--hot) 55%,#e0336e);-webkit-background-clip:text;background-clip:text}
+.lead{font-size:clamp(1rem,1.5vw,1.15rem);color:var(--muted);max-width:60ch;margin:20px 0 0}
+
+/* imager */
+.imager{touch-action:pan-y;cursor:grab;position:relative;border-radius:20px;overflow:hidden;background:#04020f;border:1px solid var(--line);aspect-ratio:4/3;max-width:100%;box-shadow:0 30px 80px -30px rgba(255,110,40,.35)}
+.imager canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.88);text-shadow:0 1px 2px rgba(0,0,0,.8);pointer-events:none}
+.hud-tl{top:14px;left:16px;display:flex;align-items:center;gap:8px}
+.hud-tl b{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b;animation:pulse 1.2s steps(2) infinite}
+.hud-tr{top:14px;right:78px;text-align:right}
+@media (max-width:560px){.hud-tr{display:none}}
+.hud-bl{bottom:14px;left:16px;display:grid;gap:2px}
+.hud-bl strong{font-size:15px;font-weight:600;color:#fff}
+.scale{position:absolute;right:16px;top:16px;bottom:16px;width:10px;border-radius:5px;background:var(--ir);box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+.scale-t,.scale-b{position:absolute;right:32px;font-family:var(--f-mono);font-size:11px;color:#fff;text-shadow:0 1px 2px #000}
+.scale-t{top:12px}.scale-b{bottom:12px}
+.cross{position:absolute;left:50%;top:52%;width:34px;height:34px;transform:translate(-50%,-50%);pointer-events:none}
+.cross::before,.cross::after{content:"";position:absolute;background:rgba(255,255,255,.75)}
+.cross::before{left:50%;top:0;bottom:0;width:1px}
+.cross::after{top:50%;left:0;right:0;height:1px}
+.corner{position:absolute;width:18px;height:18px;border-color:rgba(255,255,255,.55);border-style:solid;pointer-events:none}
+.c1{top:40px;left:16px;border-width:1px 0 0 1px}.c2{top:40px;right:40px;border-width:1px 1px 0 0}
+.c3{bottom:56px;left:16px;border-width:0 0 1px 1px}.c4{bottom:56px;right:40px;border-width:0 1px 1px 0}
+
+/* controls panel */
+.controls{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 22px;display:grid}
+.field{display:grid;gap:12px;padding-block:20px;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.field-head output{font-family:var(--f-mono);font-size:14px;color:var(--ink)}
+.sub{font-size:13px;color:var(--muted)}
+select,input[type=number]{width:100%;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:500 16px var(--f-body)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 52%,calc(100% - 15px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:40px}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+.area-row{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:14px;align-items:center}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--hot),var(--warm)) 0/var(--p,30%) 100% no-repeat,var(--panel-2);outline-offset:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--hot);box-shadow:0 0 14px rgba(255,138,42,.6);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid var(--hot);box-shadow:0 0 14px rgba(255,138,42,.6);cursor:pointer}
+.unit-input{position:relative}
+.unit-input span{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+.unit-input input{padding-right:44px}
+
+.seg{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px}
+.seg input,.ins input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:block;text-align:center;padding:10px 6px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);font-size:14px;color:var(--muted);cursor:pointer;transition:border-color .2s,color .2s}
+.seg input:checked+label{border-color:var(--hot);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hot)}
+.seg input:focus-visible+label,.ins input:focus-visible+label{outline:2px solid var(--hot);outline-offset:2px}
+
+.ins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ins label{display:grid;gap:6px;padding:12px 12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);cursor:pointer;min-width:0;transition:border-color .2s}
+.ins label strong{font-size:14px;font-weight:600}
+.ins label small{font-size:12px;line-height:1.35;color:var(--muted)}
+.ins label i{height:4px;border-radius:2px;background:linear-gradient(90deg,#1e0a5c,#6e148c 25%,#be1e6e 45%,#eb5a1e 62%,#ffa014 78%,#ffe15a) 0/var(--heat) 100% no-repeat,var(--line)}
+.ins input:checked+label{border-color:var(--hot);box-shadow:inset 0 0 0 1px var(--hot)}
+@media (max-width:420px){.ins{grid-template-columns:minmax(0,1fr)}}
+
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.switch{position:relative;width:48px;height:28px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);transition:background .2s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.switch input:checked+span{background:rgba(255,138,42,.25);border-color:var(--hot)}
+.switch input:checked+span::after{transform:translateX(20px);background:var(--hot)}
+.switch input:focus-visible+span{outline:2px solid var(--hot);outline-offset:2px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:18px;cursor:pointer}
+.stepper output{font-family:var(--f-mono);min-width:2ch;text-align:center}
+
+/* results */
+.results{background:linear-gradient(160deg,#1c1324,#110f1b 55%);border:1px solid var(--line);border-radius:20px;padding:26px 24px 24px;display:grid;gap:22px}
+.big{display:grid;gap:4px}
+.big-num{font-family:var(--f-display);font-weight:800;font-size:clamp(3rem,7.4vw,5.4rem);line-height:.95;letter-spacing:-.03em;color:var(--warm);text-shadow:0 0 40px rgba(255,160,20,.35);font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.big-num small{font-family:var(--f-body);font-size:1.25rem;font-weight:600;color:var(--ink);letter-spacing:0}
+.range{font-size:14px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.metric{background:var(--panel);padding:14px;display:grid;gap:6px;min-width:0}
+.metric .v{font-family:var(--f-display);font-weight:700;font-size:clamp(1.15rem,2.2vw,1.5rem);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.metric .v small{font-family:var(--f-body);font-size:.8rem;font-weight:500;color:var(--muted);margin-left:4px}
+@media (max-width:520px){.metrics{grid-template-columns:minmax(0,1fr)}}
+.note{font-size:13px;color:var(--muted);margin:0}
+.dual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.dual>div{background:var(--panel);padding:12px 14px;display:grid;gap:4px;min-width:0}
+.dual b{font-family:var(--f-display);font-weight:700;font-size:clamp(1.1rem,2vw,1.35rem);font-variant-numeric:tabular-nums}
+.dual .is-main b{color:var(--warm)}
+.dual small{font-size:12.5px;color:var(--muted)}
+.note b{color:var(--ink);font-weight:600}
+
+/* sections */
+section.block{padding-block:56px;border-top:1px solid var(--line)}
+h2{font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,3vw,2.3rem);letter-spacing:-.02em;line-height:1.1;margin:0 0 12px;text-wrap:balance}
+.block-lead{color:var(--muted);max-width:62ch;margin:0 0 30px}
+
+.compare-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.compare-grid{grid-template-columns:minmax(0,1fr)}}
+.bars{display:grid;gap:14px}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 120px;gap:14px;align-items:center}
+.bar-name{display:grid;font-weight:600;font-size:15px}
+.bar-name small{font-weight:400;color:var(--muted);font-size:12px}
+.bar-track{height:14px;border-radius:7px;background:var(--panel-2);overflow:hidden}
+.bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#6e148c,#be1e6e 45%,var(--hot));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.bar.is-gas .bar-fill{background:linear-gradient(90deg,var(--hot),var(--warm))}
+.bar-val{font-family:var(--f-mono);font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){.bar{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "t t";gap:6px 12px}.bar-name{grid-area:n}.bar-val{grid-area:v}.bar-track{grid-area:t}}
+.tariffs{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px}
+.tariffs .sub{margin:0}
+
+.method-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:32px;align-items:start}
+@media (max-width:860px){.method-grid{grid-template-columns:minmax(0,1fr)}}
+.method-grid p{color:var(--muted);margin:0 0 14px;max-width:62ch}
+.formula{background:#0c0a15;border:1px solid var(--line);border-radius:16px;padding:6px 20px;font-family:var(--f-mono);font-size:13.5px;overflow-x:auto}
+.formula div{display:grid;gap:3px;padding-block:14px;border-bottom:1px dashed var(--line)}
+.formula div:last-child{border-bottom:0}
+.formula span{color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.formula code{color:var(--ink);white-space:nowrap}
+.formula code b{color:var(--warm);font-weight:600}
+
+.faq{display:grid;gap:10px;max-width:860px}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 20px}
+.faq summary{cursor:pointer;list-style:none;padding-block:18px;font-weight:600;font-size:17px;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--f-mono);color:var(--hot);font-size:20px;line-height:1;transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 18px;color:var(--muted);max-width:68ch}
+
+footer{border-top:1px solid var(--line);padding-block:30px 40px;color:var(--muted);font-size:13px}
+footer .wrap{display:grid;gap:8px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top wrap">
+  <a class="logo" href="#calc"><i aria-hidden="true"></i><b>Тепло<span>счёт</span></b></a>
+  <nav aria-label="Разделы">
+    <a href="#calc">Калькулятор</a>
+    <a href="#compare">Газ или электричество</a>
+    <a href="#method">Как считаем</a>
+    <a href="#faq">Вопросы</a>
+  </nav>
+</header>
+
+<main>
+<section class="hero wrap" id="calc">
+  <div class="intro">
+    <p class="eyebrow">Калькулятор расхода газа котлом</p>
+    <h1>Сколько газа сожжёт ваш котёл <em>этой зимой</em></h1>
+    <p class="lead">Выберите город, площадь и утепление. Расчёт учитывает морозы и длину отопительного сезона именно в вашем климате и показывает кубометры, рубли и нужную мощность котла.</p>
+  </div>
+
+  <div class="visual">
+  <div class="imager-wrap">
+    <div class="imager" role="img" aria-label="Тепловизионный снимок дома: чем хуже утепление, тем ярче светятся стены, окна и крыша">
+      <canvas id="ir" width="480" height="360"></canvas>
+      <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+      <div class="cross"></div>
+      <div class="hud hud-tl"><b></b>ИК · ε 0,95 · <span id="hudCity">Москва</span></div>
+      <div class="hud hud-tr" id="hudOut">−25 °C снаружи</div>
+      <div class="hud hud-bl"><span>Теплопотери в мороз</span><strong id="hudLoss">6,2 кВт</strong></div>
+      <div class="scale"></div>
+      <div class="hud scale-t" id="scaleT">+22°</div>
+      <div class="hud scale-b" id="scaleB">−25°</div>
+    </div>
+  </div>
+  <div class="results" aria-live="polite">
+    <div class="big">
+      <span class="label">Газа за отопительный сезон</span>
+      <div class="big-num"><span id="gasSeason">0</span><small>м³</small></div>
+      <span class="range" id="gasRange"></span>
+    </div>
+    <div class="dual">
+      <div class="is-main"><span class="label">Реальный газ · 9,0 кВт·ч/м³</span><b><span id="gasTyp">0</span> м³</b><small id="costTyp"></small></div>
+      <div><span class="label">Минимум по ГОСТ · 8,83 кВт·ч/м³</span><b><span id="gasGost">0</span> м³</b><small id="costGost"></small></div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><span class="label">Стоит за сезон</span><span class="v"><span id="costSeason">0</span><small>₽</small></span></div>
+      <div class="metric"><span class="label">В средний месяц</span><span class="v"><span id="gasMonth">0</span><small>м³</small></span></div>
+      <div class="metric"><span class="label">Котёл мощностью</span><span class="v"><span id="boilerKw">0</span><small>кВт</small></span></div>
+    </div>
+    <p class="note" id="peakNote"></p>
+  </div>
+  </div>
+
+  <form class="controls" id="form" novalidate>
+    <div class="field">
+      <div class="field-head"><label class="label" for="city">Город или регион</label></div>
+      <select id="city"></select>
+      <div class="sub" id="cityInfo"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><label class="label" for="areaRange">Отапливаемая площадь</label><output id="areaOut" class="mono">120 м²</output></div>
+      <div class="area-row">
+        <input type="range" id="areaRange" min="30" max="400" step="5" value="120" aria-label="Площадь, ползунок">
+        <div class="unit-input"><input type="number" id="area" min="20" max="1000" step="1" value="120" inputmode="numeric" aria-label="Площадь в квадратных метрах"><span>м²</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="label" id="insLbl">Как утеплён дом</span></div>
+      <div class="ins" role="radiogroup" aria-labelledby="insLbl" id="insGroup"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="label" id="hLbl">Высота потолков</span></div>
+      <div class="seg" style="--n:3" role="radiogroup" aria-labelledby="hLbl">
+        <input type="radio" name="height" id="h25" value="2.5"><label for="h25">2,5 м</label>
+        <input type="radio" name="height" id="h27" value="2.7" checked><label for="h27">2,7 м</label>
+        <input type="radio" name="height" id="h30" value="3.0"><label for="h30">3 м и выше</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="label" id="flLbl">Этажей</span></div>
+      <div class="seg" style="--n:3" role="radiogroup" aria-labelledby="flLbl">
+        <input type="radio" name="floors" id="fl1" value="1" checked><label for="fl1">Один</label>
+        <input type="radio" name="floors" id="fl15" value="0.93"><label for="fl15">С мансардой</label>
+        <input type="radio" name="floors" id="fl2" value="0.87"><label for="fl2">Два</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="label" id="tLbl">Температура в доме</span></div>
+      <div class="seg" style="--n:3" role="radiogroup" aria-labelledby="tLbl">
+        <input type="radio" name="tin" id="t20" value="20"><label for="t20">+20 °C</label>
+        <input type="radio" name="tin" id="t22" value="22" checked><label for="t22">+22 °C</label>
+        <input type="radio" name="tin" id="t24" value="24"><label for="t24">+24 °C</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><span class="label" id="bLbl">Тип котла</span></div>
+      <div class="seg" style="--n:2" role="radiogroup" aria-labelledby="bLbl">
+        <input type="radio" name="boiler" id="bConv" value="0.92" checked><label for="bConv">Обычный · КПД 92%</label>
+        <input type="radio" name="boiler" id="bCond" value="0.98"><label for="bCond">Конденсационный · 98%</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="toggle-row">
+        <div><div class="label">Горячая вода от котла</div><div class="sub">Двухконтурный котёл греет и воду</div></div>
+        <label class="switch"><input type="checkbox" id="dhw" checked aria-label="Горячая вода от котла"><span></span></label>
+      </div>
+      <div class="toggle-row" id="personsRow">
+        <span class="sub">Сколько человек живёт в доме</span>
+        <div class="stepper">
+          <button type="button" id="pMinus" aria-label="Меньше жильцов">−</button>
+          <output id="persons" class="mono">3</output>
+          <button type="button" id="pPlus" aria-label="Больше жильцов">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-head"><label class="label" for="tGas">Тариф на газ</label></div>
+      <div class="unit-input"><input type="number" id="tGas" min="1" max="50" step="0.01" value="9" inputmode="decimal"><span>₽/м³</span></div>
+      <div class="sub">Впишите цену из своей квитанции: тарифы отличаются по регионам.</div>
+    </div>
+  </form>
+</section>
+
+<section class="block" id="compare">
+  <div class="wrap">
+    <h2>Газ, электричество, тепловой насос или дрова</h2>
+    <p class="block-lead">Тот же дом и тот же сезон, но разное топливо. Цены можно поправить справа под свой регион.</p>
+    <div class="compare-grid">
+      <div class="bars" id="bars"></div>
+      <div class="tariffs">
+        <div>
+          <label class="label" for="tEl">Электричество</label>
+          <div class="unit-input" style="margin-top:8px"><input type="number" id="tEl" min="0.5" max="30" step="0.01" value="6" inputmode="decimal"><span>₽/кВт·ч</span></div>
+        </div>
+        <div>
+          <label class="label" for="tWood">Дрова, берёза</label>
+          <div class="unit-input" style="margin-top:8px"><input type="number" id="tWood" min="100" max="20000" step="50" value="3000" inputmode="decimal"><span>₽/скл. м³</span></div>
+        </div>
+        <p class="sub">Для теплового насоса взят средний сезонный коэффициент 2,5. В сильный мороз он работает хуже, поэтому в Сибири реальная экономия меньше.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="method">
+  <div class="wrap method-grid">
+    <div>
+      <h2>Как мы считаем</h2>
+      <p>Сначала оцениваем, сколько тепла дом теряет на каждый градус разницы между комнатой и улицей. Это зависит от площади, высоты потолков и утепления.</p>
+      <p>Потом берём климат вашего города из свода правил СП 131.13330.2025 «Строительная климатология» (действует с сентября 2025 года): температуру самой холодной пятидневки и длину отопительного сезона. Из них получается ГСОП, градусо-сутки отопительного периода. Это главная цифра, по которой инженеры считают расход тепла. Три градуса мы вычитаем: часть тепла дому дают люди, техника, плита и солнце в окнах, и котлу их догревать не нужно.</p>
+      <p>Тепло переводим в газ. Кубометр газа из сети даёт около 9,0 кВт·ч: ГОСТ 5542 гарантирует не меньше 31,8 МДж, то есть 8,83 кВт·ч, справочники часто пишут 9,3, мы берём середину. Рядом с основным результатом показываем и расход при минимуме по ГОСТ: это верхняя граница, больше газа при той же нагрузке не уйдёт. Котёл передаёт в дом 92–98% от этого.</p>
+      <p>Для двухэтажного дома теплопотери на квадратный метр ниже: у него меньше крыши и пола на ту же площадь.</p>
+      <p>Справа ваш расчёт по шагам с вашими цифрами.</p>
+    </div>
+    <div class="formula" id="formula"></div>
+  </div>
+</section>
+
+<section class="block" id="faq">
+  <div class="wrap">
+    <h2>Частые вопросы</h2>
+    <div class="faq">
+      <details>
+        <summary>Сколько газа в час тратит котёл на 24 кВт?</summary>
+        <p>На полной мощности обычный котёл 24 кВт сжигает около 2,9 м³ газа в час. Но мощность — это потолок, а не расход. Большую часть сезона котёл работает на 30–50%, а на полную выходит только в сильные морозы и когда греет воду.</p>
+      </details>
+      <details>
+        <summary>Почему у соседа с таким же домом расход меньше?</summary>
+        <p>Чаще всего дело в утеплении чердака и окнах, через них уходит больше всего тепла. Ещё влияют температура в комнатах, вентиляция, сквозняки и то, есть ли у котла погодозависимая автоматика.</p>
+      </details>
+      <details>
+        <summary>Как снизить расход газа?</summary>
+        <p>Каждый градус ниже в комнатах экономит примерно 3–5% газа за сезон: чем мягче климат, тем больше доля. Дальше по отдаче идут утепление чердака, погодозависимая автоматика или комнатный термостат и замена старых окон.</p>
+      </details>
+      <details>
+        <summary>Насколько точен расчёт?</summary>
+        <p>Это инженерная оценка с точностью примерно ±20%. Реальный расход зависит от зимы, привычек семьи и того, как построен конкретный дом. Для проекта отопления нужен расчёт теплопотерь по проекту дома, его делает инженер.</p>
+      </details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Расчёт оценочный. Климат по СП 131.13330.2025 «Строительная климатология», таблица 5.1. Тарифы берите из своих квитанций.</span>
+    <span>© Теплосчёт, 2026</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // [город, расчётная t пятидневки, дней отопления, средняя t отопительного периода]
+  // СП 131.13330.2025, табл. 5.1: [город, пятидневка 0,92, сут ≤8 °C, ср. t ≤8 °C]
+  const CITIES = [
+    ['Москва и область',-23,202,-1.7],['Санкт-Петербург',-23,208,-0.8],['Новосибирск',-36,220,-7.4],
+    ['Екатеринбург',-30,216,-5.1],['Красноярск',-37,230,-6.1],['Омск',-34,212,-7.6],['Казань',-28,204,-4.2],
+    ['Нижний Новгород',-26,205,-3.2],['Уфа',-31,206,-5.4],['Воронеж',-23,186,-2.0],['Краснодар',-15,142,2.9],
+    ['Иркутск',-33,230,-7.1],['Барнаул',-34,211,-7.0]
+  ];
+  const INS = [
+    {id:'eco', name:'Отлично', hint:'Газобетон или каркас, 150+ мм утеплителя, тройные стеклопакеты', u:0.8, L:0.1, heat:'12%'},
+    {id:'norm',name:'По нормам', hint:'Утеплены стены и чердак, двойные стеклопакеты', u:1.1, L:0.36, heat:'40%'},
+    {id:'avg', name:'Средне', hint:'Кирпич или брус без дополнительного утепления', u:1.6, L:0.66, heat:'70%'},
+    {id:'old', name:'Плохо', hint:'Старый дом, сквозняки, деревянные окна', u:2.3, L:0.95, heat:'95%'}
+  ];
+  const GAIN = 3, LHV = 9.0, SIZES = [10,12,14,16,18,20,24,28,32,35,40,45,50,60,70,80,100];
+
+  // build controls
+  const sel = $('city');
+  CITIES.forEach((c,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=c[0]; sel.appendChild(o); });
+  const ig = $('insGroup');
+  INS.forEach((x,i)=>{
+    ig.insertAdjacentHTML('beforeend',
+      `<input type="radio" name="ins" id="ins-${x.id}" value="${i}" ${i===1?'checked':''}>`+
+      `<label for="ins-${x.id}" style="--heat:${x.heat}"><strong>${x.name}</strong><small>${x.hint}</small><i></i></label>`);
+  });
+
+  const fmt = (n,d=0) => n.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const tfmt = t => (t>0?'+':t<0?'−':'') + fmt(Math.abs(t), Math.abs(t)%1?1:0);
+  const r10 = x => Math.round(x/10)*10, r100 = x => Math.round(x/100)*100;
+  const radio = n => document.querySelector(`input[name="${n}"]:checked`).value;
+  let persons = 3;
+
+  function read(){
+    const c = CITIES[+sel.value];
+    let area = parseFloat($('area').value); if(!(area>0)) area = 120; area = Math.min(Math.max(area,20),1000);
+    const num = id => { const v = parseFloat(String($(id).value).replace(',','.')); return v>0 ? v : null; };
+    return { city:c, area, ins:INS[+radio('ins')], h:+radio('height'), fl:+radio('floors'), tin:+radio('tin'), eta:+radio('boiler'),
+      dhw:$('dhw').checked, persons, tGas:num('tGas')??9, tEl:num('tEl')??6, tWood:num('tWood')??3000 };
+  }
+
+  function calc(s){
+    const [name,t5,days,tm] = s.city;
+    const H = s.area * s.ins.u * (s.h/2.7) * s.fl;       // Вт/°C
+    const peak = H*(s.tin - t5)/1000;                     // кВт
+    const minLoad = H*(s.tin - 8)/1000;                   // кВт в оттепель, +8 °C
+    const gsop = (s.tin - GAIN - tm)*days;                // °C·сут, минус бытовое тепло
+    const eHeat = H*gsop*24/1000;                         // кВт·ч
+    const dhwDay = s.dhw ? s.persons*2.03 : 0;            // 50 л на человека, нагрев на 35 °C
+    const eSeason = eHeat + dhwDay*days;
+    const gasSeason = eSeason/(LHV*s.eta);
+    const gasPeak = peak/(LHV*s.eta);
+    const months = days/30.4;
+    let need = peak*1.2, kw = SIZES.find(x=>x>=need) ?? Math.ceil(need);
+    const dhwBump = s.dhw && kw < 24;
+    if (dhwBump) kw = 24;
+    return { name,t5,days,tm,H,peak,minLoad,gsop,eHeat,eSeason,gasSeason,gasPeak,gasMonth:gasSeason/months,
+      cost:gasSeason*s.tGas, kw, dhwBump,
+      fuels:[
+        {k:'gas', n:'Газ', d:'котёл', v:gasSeason*s.tGas},
+        {k:'hp', n:'Тепловой насос', d:'воздух–вода', v:eSeason/2.5*s.tEl},
+        {k:'wood', n:'Дрова', d:`≈ ${fmt(eSeason/(1900*0.75),0)} скл. м³`, v:eSeason/(1900*0.75)*s.tWood},
+        {k:'el', n:'Электрокотёл', d:'прямой нагрев', v:eSeason/0.99*s.tEl}
+      ]};
+  }
+
+  // animated numbers
+  function tween(el, to, digits=0){
+    const from = parseFloat(el.dataset.v||'0');
+    el.dataset.v = to;
+    if (reduce || from===to){ el.textContent = fmt(to,digits); return; }
+    const t0 = performance.now(), dur = 520;
+    (function step(t){
+      const p = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-p,3);
+      el.textContent = fmt(from+(to-from)*e, digits);
+      if (p<1 && el.dataset.v==String(to)) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  let target = {L:INS[1].L, plume:.4};
+
+  function update(){
+    const s = read(), r = calc(s);
+    const ar = $('areaRange');
+    ar.value = Math.min(Math.max(s.area,30),400);
+    ar.style.setProperty('--p', ((ar.value-30)/(370)*100)+'%');
+    $('areaOut').textContent = fmt(s.area) + ' м²';
+    $('cityInfo').textContent = `Мороз до ${tfmt(r.t5)} °C · отопление ${r.days} дней · в среднем ${tfmt(r.tm)} °C`;
+    $('personsRow').hidden = !s.dhw;
+    $('persons').textContent = persons;
+
+    tween($('gasSeason'), r10(r.gasSeason));
+    const gasG = r.eSeason/(8.833*s.eta);
+    tween($('gasTyp'), r10(r.gasSeason)); tween($('gasGost'), r10(gasG));
+    $('costTyp').textContent = `≈ ${fmt(r100(r.cost))} ₽ за сезон`;
+    $('costGost').textContent = `≈ ${fmt(r100(gasG*s.tGas))} ₽ за сезон`;
+    tween($('costSeason'), r100(r.cost));
+    tween($('gasMonth'), r10(r.gasMonth));
+    tween($('boilerKw'), r.kw);
+    $('gasRange').textContent = `Обычно от ${fmt(r10(r.gasSeason*0.8))} до ${fmt(r10(r.gasSeason*1.2))} м³, в зависимости от зимы и дома. За год с летней горячей водой ≈ ${fmt(r10(r.gasSeason + (s.dhw? s.persons*2.03*(365-r.days)/(LHV*s.eta):0)))} м³.`;
+    $('peakNote').innerHTML = `В самый сильный мороз дом теряет <b>${fmt(r.peak,1)} кВт</b>, котёл сжигает до <b>${fmt(r.gasPeak,2)} м³ в час</b>. Мощность котла взята с запасом 20%. В оттепель, при +8 °C, дому нужно всего <b>${fmt(r.minLoad,1)} кВт</b>: выбирайте котёл, который умеет работать так слабо, иначе он будет часто включаться и выключаться.` +
+      (r.dhwBump ? ' Двухконтурному котлу для проточной горячей воды нужно не меньше 24 кВт.' : '');
+
+    // HUD
+    $('hudCity').textContent = r.name.replace(' и область','');
+    $('hudOut').textContent = `${tfmt(r.t5)} °C снаружи`;
+    $('hudLoss').textContent = `${fmt(r.peak,1)} кВт`;
+    $('scaleT').textContent = `${tfmt(s.tin)}°`;
+    $('scaleB').textContent = `${tfmt(r.t5)}°`;
+
+    // bars
+    const max = Math.max(...r.fuels.map(f=>f.v));
+    const bars = $('bars');
+    if (!bars.children.length){
+      r.fuels.forEach(f=>bars.insertAdjacentHTML('beforeend',
+        `<div class="bar ${f.k==='gas'?'is-gas':''}" data-k="${f.k}"><div class="bar-name">${f.n}<small></small></div><div class="bar-track"><div class="bar-fill" style="width:0"></div></div><div class="bar-val"></div></div>`));
+    }
+    r.fuels.forEach(f=>{
+      const row = bars.querySelector(`[data-k="${f.k}"]`);
+      row.querySelector('small').textContent = f.d;
+      row.querySelector('.bar-fill').style.width = (f.v/max*100).toFixed(1)+'%';
+      row.querySelector('.bar-val').textContent = fmt(r100(f.v)) + ' ₽';
+    });
+
+    // formula
+    $('formula').innerHTML = [
+      ['Теплопотери на градус', `${fmt(s.area)} м² × ${fmt(s.ins.u,1)} Вт/(м²·°C) × ${fmt(s.h/2.7,2)}${s.fl<1?' × '+fmt(s.fl,2):''} = <b>${fmt(r.H)} Вт/°C</b>`],
+      ['Нагрузка в мороз', `${fmt(r.H)} × (${tfmt(s.tin)} − (${tfmt(r.t5)})) = <b>${fmt(r.peak,1)} кВт</b>`],
+      ['Градусо-сутки (ГСОП)', `(${tfmt(s.tin)} − 3 − (${tfmt(r.tm)})) × ${r.days} сут = <b>${fmt(r.gsop)} °C·сут</b>`],
+      ['Тепло на отопление', `${fmt(r.H)} × ${fmt(r.gsop)} × 24 ч = <b>${fmt(r10(r.eHeat))} кВт·ч</b>`],
+      ['Плюс горячая вода', s.dhw ? `${s.persons} чел × 2,03 кВт·ч × ${r.days} сут = <b>${fmt(r10(r.eSeason-r.eHeat))} кВт·ч</b>` : 'не учитываем'],
+      ['Газ за сезон', `${fmt(r10(r.eSeason))} ÷ (9,0 × ${fmt(s.eta,2)}) = <b>${fmt(r10(r.gasSeason))} м³</b>`]
+    ].map(([a,b])=>`<div><span>${a}</span><code>${b}</code></div>`).join('');
+
+    target.L = s.ins.L * (0.85 + 0.15*Math.min(1,(s.tin-r.t5)/62));
+    target.plume = Math.min(1, r.gasPeak/4);
+    if (reduce) drawFrame(performance.now(), true);
+  }
+
+  // events
+  const form = $('form');
+  form.addEventListener('submit', e=>e.preventDefault());
+  form.addEventListener('input', e=>{ if(e.target.id==='areaRange') $('area').value = e.target.value; update(); });
+  form.addEventListener('change', update);
+  ['tEl','tWood'].forEach(id=>$(id).addEventListener('input', update));
+  $('pMinus').addEventListener('click', ()=>{ persons=Math.max(1,persons-1); update(); });
+  $('pPlus').addEventListener('click', ()=>{ persons=Math.min(10,persons+1); update(); });
+
+  // ---------- thermal imager: 3D house ----------
+  const VW=480, VH=360;
+  const view=$('ir'), vctx=view.getContext('2d');
+  const heat=document.createElement('canvas'); heat.width=VW; heat.height=VH;
+  const h=heat.getContext('2d',{willReadFrequently:true});
+  const stops=[[0,[4,2,15]],[.18,[30,10,92]],[.36,[110,20,140]],[.52,[190,30,110]],[.66,[235,90,30]],[.8,[255,160,20]],[.92,[255,225,90]],[1,[255,251,230]]];
+  const LUT=new Uint8ClampedArray(256*3);
+  for(let i=0;i<256;i++){ const t=i/255; let j=0; while(j<stops.length-2 && t>stops[j+1][0]) j++;
+    const [a,ca]=stops[j],[b,cb]=stops[j+1], k=(t-a)/(b-a);
+    for(let c=0;c<3;c++) LUT[i*3+c]=ca[c]+(cb[c]-ca[c])*k; }
+  const NOISE=new Int8Array(1<<17); for(let i=0;i<NOISE.length;i++) NOISE[i]=(Math.random()*7-3)|0;
+  let cur={L:target.L, plume:target.plume}, parts=[], last=0, frameNo=0;
+  const g = (v,a=1) => { v=Math.max(0,Math.min(255,Math.round(v))); return a===1?`rgb(${v},${v},${v})`:`rgba(${v},${v},${v},${a})`; };
+
+  // ---- geometry (metres): x — ширина, y — высота, z — длина дома ----
+  const HW=4, HD=5, EAVE=4.1, RIDGE=7, OV=0.55;
+  const ry = x => RIDGE - (RIDGE-EAVE)/HW*Math.abs(x);       // высота кровли над точкой x
+  const V=(x,y,z)=>[x,y,z];
+  const box=(x0,x1,y0,y1,z0,z1)=>[
+    {n:[1,0,0], p:[V(x1,y0,z1),V(x1,y0,z0),V(x1,y1,z0),V(x1,y1,z1)]},
+    {n:[-1,0,0],p:[V(x0,y0,z0),V(x0,y0,z1),V(x0,y1,z1),V(x0,y1,z0)]},
+    {n:[0,0,1], p:[V(x0,y0,z1),V(x1,y0,z1),V(x1,y1,z1),V(x0,y1,z1)]},
+    {n:[0,0,-1],p:[V(x1,y0,z0),V(x0,y0,z0),V(x0,y1,z0),V(x1,y1,z0)]},
+    {n:[0,1,0], p:[V(x0,y1,z1),V(x1,y1,z1),V(x1,y1,z0),V(x0,y1,z0)]}
+  ];
+  // окна: прямоугольники на гранях, k — насколько окно «течёт»
+  const rectZ=(x0,x1,y0,y1,z,s)=>[V(x0,y0,z+s*.01),V(x1,y0,z+s*.01),V(x1,y1,z+s*.01),V(x0,y1,z+s*.01)];
+  const rectX=(z0,z1,y0,y1,x,s)=>[V(x+s*.01,y0,z0),V(x+s*.01,y0,z1),V(x+s*.01,y1,z1),V(x+s*.01,y1,z0)];
+  const circZ=(cx,cy,r,z)=>Array.from({length:20},(_,i)=>V(cx+r*Math.cos(i/20*Math.PI*2),cy+r*Math.sin(i/20*Math.PI*2),z+.01));
+  const gable=(z,s)=>[V(-HW,0,z),V(HW,0,z),V(HW,EAVE,z),V(0,RIDGE,z),V(-HW,EAVE,z)];
+  const W = {
+    front:[{p:rectZ(-3.1,-1.1,1.1,2.9,HD,1),k:1,mx:true},{p:rectZ(.7,1.9,0,2.5,HD,1),k:.82,door:true},{p:circZ(0,5.35,.5,HD),k:.9}],
+    back:[{p:rectZ(-1,1,1.1,2.9,-HD,-1),k:1,mx:true}],
+    right:[{p:rectX(2.2,3.8,1.1,2.9,HW,1),k:1,mx:true},{p:rectX(-.8,.8,1.1,2.9,HW,1),k:1,mx:true},{p:rectX(-3.8,-2.2,1.1,2.9,HW,1),k:1,mx:true}],
+    left:[{p:rectX(-.8,.8,1.1,2.9,-HW,-1),k:1,mx:true},{p:rectX(2.2,3.8,1.1,2.9,-HW,-1),k:1,mx:true}]
+  };
+  const faces=[
+    {id:'front',n:[0,0,1],p:gable(HD),kind:'wall',win:W.front},
+    {id:'back',n:[0,0,-1],p:gable(-HD).reverse(),kind:'wall',win:W.back},
+    {id:'right',n:[1,0,0],p:[V(HW,0,HD),V(HW,0,-HD),V(HW,EAVE,-HD),V(HW,EAVE,HD)],kind:'wall',win:W.right},
+    {id:'left',n:[-1,0,0],p:[V(-HW,0,-HD),V(-HW,0,HD),V(-HW,EAVE,HD),V(-HW,EAVE,-HD)],kind:'wall',win:W.left},
+    {id:'roofR',n:[.57,.82,0],p:[V(0,RIDGE,HD+OV),V(HW+OV,ry(HW+OV),HD+OV),V(HW+OV,ry(HW+OV),-HD-OV),V(0,RIDGE,-HD-OV)],kind:'roof'},
+    {id:'roofL',n:[-.57,.82,0],p:[V(0,RIDGE,-HD-OV),V(-HW-OV,ry(HW+OV),-HD-OV),V(-HW-OV,ry(HW+OV),HD+OV),V(0,RIDGE,HD+OV)],kind:'roof'},
+    ...box(-HW-.15,HW+.15,-.45,0,-HD-.15,HD+.15).filter(f=>f.n[1]===0).map(f=>({...f,kind:'plinth'}))
+  ];
+  const chimney=box(1.3,2.1,4.6,8.4,-2.4,-1.6).map(f=>({...f,kind:'chim'}));
+  const TREES=[[-13,-14,7],[-9,-20,9],[11,-16,8],[15,-9,6],[-17,-4,6],[6,-24,10],[19,-22,9],[-22,-18,8]];
+
+  // ---- camera ----
+  let yaw=.68, yawUser=0, yawDrag=0, cam, R, U, F;
+  const T=[0,3.1,0], DIST=27, EL=.2, FOC=505;
+  const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const norm=a=>{const l=Math.hypot(...a);return [a[0]/l,a[1]/l,a[2]/l]};
+  function setCam(y){
+    cam=[T[0]+DIST*Math.sin(y)*Math.cos(EL), T[1]+DIST*Math.sin(EL)+1.2, T[2]+DIST*Math.cos(y)*Math.cos(EL)];
+    F=norm(sub(T,cam)); R=norm(cross(F,[0,1,0])); U=cross(R,F);
+  }
+  function P(v){ const d=sub(v,cam), z=dot(d,F); return [VW/2+FOC*dot(d,R)/z, VH*.6-FOC*dot(d,U)/z, z]; }
+  const facing=f=>dot(f.n, sub(cam,f.p[0]))>0;
+  const depth=f=>f.p.reduce((s,v)=>s+dot(sub(v,cam),F),0)/f.p.length;
+  function poly(pts){ h.beginPath(); pts.forEach((v,i)=>{const q=P(v); i?h.lineTo(q[0],q[1]):h.moveTo(q[0],q[1]);}); h.closePath(); }
+  function yRange(pts){ let a=1e9,b=-1e9; pts.forEach(v=>{const q=P(v)[1]; a=Math.min(a,q); b=Math.max(b,q);}); return [a,b]; }
+
+  // температура грани: базовая + поправка на угол к камере (излучательная способность)
+  function faceFill(f,L){
+    const ang=Math.max(.35, dot(f.n, norm(sub(cam,f.p[0]))));
+    const [top,bot]=yRange(f.p);
+    let lo,hi;
+    if(f.kind==='wall'){ lo=52+L*62; hi=72+L*96; }
+    else if(f.kind==='roof'){ lo=46+L*92; hi=62+L*128; }
+    else if(f.kind==='plinth'){ lo=hi=70+L*95; }
+    else { lo=110+L*50; hi=150+L*60; }
+    const k=.82+.18*ang;
+    const gr=h.createLinearGradient(0,top,0,bot);
+    gr.addColorStop(0,g(hi*k)); gr.addColorStop(1,g(lo*k));
+    return gr;
+  }
+
+  function drawWindow(w,L){
+    const base=w.door?120+L*92:150+L*100;
+    h.save(); h.shadowColor=g(base); h.shadowBlur=10+L*26; h.fillStyle=g(base*w.k); poly(w.p); h.fill(); h.restore();
+    // рама — тёплый мостик
+    h.lineWidth=1.6; h.strokeStyle=g(base*w.k+18); poly(w.p); h.stroke();
+    if(w.mx){ // переплёт
+      const [a,b,c,d]=w.p, mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2,(p[2]+q[2])/2];
+      h.lineWidth=1.4; h.strokeStyle=g(base*.62);
+      h.beginPath(); let q1=P(mid(a,b)),q2=P(mid(d,c)); h.moveTo(q1[0],q1[1]); h.lineTo(q2[0],q2[1]);
+      q1=P(mid(a,d)); q2=P(mid(b,c)); h.moveTo(q1[0],q1[1]); h.lineTo(q2[0],q2[1]); h.stroke();
+    }
+  }
+
+  function edge(a,b,v,w,blur){ h.save(); h.strokeStyle=h.shadowColor=g(v); h.shadowBlur=blur; h.lineWidth=w; h.lineCap='round';
+    const p=P(a),q=P(b); h.beginPath(); h.moveTo(p[0],p[1]); h.lineTo(q[0],q[1]); h.stroke(); h.restore(); }
+
+  function tree(x,z,s){
+    const base=P([x,0,z]), top=P([x,s,z]), w=FOC*s*.32/base[2];
+    h.fillStyle=g(30); h.beginPath();
+    for(let i=0;i<4;i++){ const y0=base[1]+(top[1]-base[1])*(i*.22), y1=base[1]+(top[1]-base[1])*(i*.22+.42), ww=w*(1-i*.22);
+      h.moveTo(base[0]-ww,y0); h.lineTo(base[0],y1); h.lineTo(base[0]+ww,y0); }
+    h.fill(); h.fillRect(base[0]-w*.06,base[1]-2,w*.12,4);
+  }
+
+  function drawFrame(ts, still){
+    const L=cur.L;
+    setCam(yaw+yawUser+yawDrag);
+    h.save(); h.shadowBlur=0;
+    // небо и снег
+    const sky=h.createLinearGradient(0,0,0,VH); sky.addColorStop(0,'rgb(2,2,2)'); sky.addColorStop(.55,'rgb(14,14,14)'); sky.addColorStop(1,'rgb(22,22,22)');
+    h.fillStyle=sky; h.fillRect(0,0,VW,VH);
+    const hor=P([0,0,-60])[1];
+    const gnd=h.createLinearGradient(0,hor,0,VH); gnd.addColorStop(0,'rgb(17,17,17)'); gnd.addColorStop(1,'rgb(26,26,26)');
+    h.fillStyle=gnd; h.fillRect(0,hor,VW,VH-hor);
+    TREES.slice().sort((a,b)=>P([a[0],0,a[1]])[2]<P([b[0],0,b[1]])[2]?1:-1).forEach(t=>tree(...t));
+    // тёплое пятно у фундамента
+    const c0=P([0,0,0]); const halo=h.createRadialGradient(c0[0],c0[1]+6,4,c0[0],c0[1]+6,190);
+    halo.addColorStop(0,g(40+L*70,.9)); halo.addColorStop(1,g(20,0));
+    h.fillStyle=halo; h.save(); h.translate(c0[0],c0[1]+6); h.scale(1,.28); h.translate(-c0[0],-(c0[1]+6)); h.beginPath(); h.arc(c0[0],c0[1]+6,190,0,Math.PI*2); h.fill(); h.restore();
+
+    // общее свечение дома
+    const vis=faces.filter(facing).sort((a,b)=>depth(b)-depth(a));
+    h.save(); h.filter=`blur(${(6+L*16).toFixed(1)}px)`; h.globalAlpha=.55+L*.35;
+    vis.forEach(f=>{ h.fillStyle=g(60+L*120); poly(f.p); h.fill(); });
+    h.restore();
+
+    vis.forEach(f=>{
+      h.fillStyle=faceFill(f,L); poly(f.p); h.fill();
+      if(f.kind==='roof'){ // теплее у конька
+        const a=P([0,RIDGE,0]), gr=h.createLinearGradient(0,a[1],0,a[1]+70);
+        gr.addColorStop(0,g(255,.10+L*.25)); gr.addColorStop(1,g(255,0)); h.fillStyle=gr; poly(f.p); h.fill();
+        // шифер/профлист — полосы вдоль ската
+        h.strokeStyle=g(0,.10); h.lineWidth=1;
+        for(let z=-HD-OV+.6; z<HD+OV; z+=.6){ const s=f.n[0]>0?1:-1; const p1=P([0,RIDGE,z]),p2=P([s*(HW+OV),ry(HW+OV),z]); h.beginPath(); h.moveTo(p1[0],p1[1]); h.lineTo(p2[0],p2[1]); h.stroke(); }
+      }
+      if(f.kind==='wall'){ // венцы / кладка — горизонтальные швы
+        h.save(); poly(f.p); h.clip(); h.strokeStyle=g(255,.035+L*.03); h.lineWidth=1;
+        for(let y=.35;y<RIDGE;y+=.35){ const a=f.p[0], b=f.p[1]; const p1=P([a[0],y,a[2]]),p2=P([b[0],y,b[2]]); h.beginPath(); h.moveTo(p1[0],p1[1]); h.lineTo(p2[0],p2[1]); h.stroke(); }
+        h.restore();
+        (f.win||[]).forEach(w=>drawWindow(w,L));
+      }
+    });
+
+    // мостики холода: углы, карнизы, цоколь, конёк
+    const eW=1.4+L*1.6, eB=4+L*12, eV=86+L*130;
+    [[HW,HD],[-HW,HD],[HW,-HD],[-HW,-HD]].forEach(([x,z])=>{ const f1={n:[Math.sign(x),0,0],p:[[x,0,z]]}, f2={n:[0,0,Math.sign(z)],p:[[x,0,z]]};
+      if(facing(f1)||facing(f2)) edge([x,0,z],[x,EAVE,z],eV,eW,eB); });
+    [HW,-HW].forEach(x=>{ if(facing({n:[Math.sign(x),0,0],p:[[x,0,0]]})){ edge([x,EAVE,-HD],[x,EAVE,HD],eV+10,eW+.6,eB+4); edge([x,0,-HD],[x,0,HD],eV-8,eW,eB);} });
+    [HD,-HD].forEach(z=>{ if(facing({n:[0,0,Math.sign(z)],p:[[0,0,z]]})){ edge([-HW,0,z],[HW,0,z],eV-8,eW,eB); edge([-HW,EAVE,z],[0,RIDGE,z],eV,eW,eB); edge([0,RIDGE,z],[HW,EAVE,z],eV,eW,eB);} });
+    edge([0,RIDGE,-HD-OV],[0,RIDGE,HD+OV],eV+28,eW+.8,eB+8);
+
+    // труба
+    chimney.filter(facing).sort((a,b)=>depth(b)-depth(a)).forEach(f=>{ h.fillStyle=faceFill(f,L); poly(f.p); h.fill(); });
+    const ct=P([1.7,8.4,-2]);
+    h.restore();
+
+    // дым
+    if(!still){
+      const rate=.35+cur.plume*1.3;
+      if(Math.random()<rate) parts.push({x:1.7+(Math.random()-.5)*.4,y:8.5,z:-2,r:.35+Math.random()*.2,life:1,vx:.012+Math.random()*.02,vy:.05+Math.random()*.03});
+      parts=parts.filter(p=>(p.x+=p.vx,p.y+=p.vy,p.r+=.012,p.life-=.011)>0);
+    } else if(!parts.length){
+      for(let i=0;i<16;i++){ const k=i/16; parts.push({x:1.7+k*1.4,y:8.5+k*4,z:-2,r:.35+k*.7,life:1-k,vx:0,vy:0}); }
+    }
+    parts.forEach(p=>{ const q=P([p.x,p.y,p.z]), r=FOC*p.r/q[2];
+      const gr=h.createRadialGradient(q[0],q[1],0,q[0],q[1],r); gr.addColorStop(0,g(235,p.life*.55*(.45+cur.plume*.6))); gr.addColorStop(1,g(235,0));
+      h.fillStyle=gr; h.beginPath(); h.arc(q[0],q[1],r,0,Math.PI*2); h.fill(); });
+
+    const img=h.getImageData(0,0,VW,VH), d=img.data, off=still?0:(frameNo*7919)&0x1ffff;
+    for(let i=0,p=0;i<d.length;i+=4,p++){
+      let v=d[i]+NOISE[(p+off)&0x1ffff]; v=v<0?0:v>255?255:v; const o=v*3;
+      d[i]=LUT[o]; d[i+1]=LUT[o+1]; d[i+2]=LUT[o+2]; d[i+3]=255;
+    }
+    vctx.putImageData(img,0,0);
+  }
+
+  // вращение пальцем или мышью
+  (function(){
+    const box=view.parentElement; let sx=null, base=0;
+    box.addEventListener('pointerdown',e=>{ sx=e.clientX; base=yawUser; box.setPointerCapture(e.pointerId); });
+    box.addEventListener('pointermove',e=>{ if(sx===null) return; yawUser=Math.max(-1.1,Math.min(1.1, base+(e.clientX-sx)/box.clientWidth*2.2)); if(reduce) drawFrame(0,true); });
+    const end=()=>{ sx=null; }; box.addEventListener('pointerup',end); box.addEventListener('pointercancel',end);
+  })();
+
+  let t0=null;
+  function loop(ts){
+    requestAnimationFrame(loop);
+    if(ts-last<40) return; last=ts; frameNo++;
+    if(t0===null) t0=ts;
+    yaw=.62+.2*Math.sin((ts-t0)/5200);
+    cur.L+=(target.L-cur.L)*.08; cur.plume+=(target.plume-cur.plume)*.08;
+    drawFrame(ts,false);
+  }
+
+  sel.value = 0;
+  update();
+  cur.L = target.L; cur.plume = target.plume;
+  if(reduce) drawFrame(0,true); else requestAnimationFrame(loop);
+})();
+</script>
+
+</body></html>
