@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dvirznev-ops.github.io/teploschet/sitemap.xml
+Sitemap: https://teplo-schet.ru/sitemap.xml
