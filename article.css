@@ -46,3 +46,5 @@ tbody td{background:var(--panel)}
 footer{border-top:1px solid var(--line);padding-block:30px 40px;color:var(--muted);font-size:13px}
 footer .wrap{display:grid;gap:8px}
 a:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+table.txt th,table.txt td{text-align:left;vertical-align:top}
+table.txt td:first-child{font-weight:600;color:#fff}
