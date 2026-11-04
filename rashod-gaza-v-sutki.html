@@ -19,15 +19,42 @@
 <link rel="stylesheet" href="article.css">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Сколько газа тратит котёл в сутки и в час", "description": "Расход газа котлом в час на полной мощности и реальный расход в сутки зимой: в обычный день и в самый сильный мороз. Таблицы для домов 100, 150 и 200 м².", "inLanguage": "ru", "datePublished": "2026-11-01", "dateModified": "2026-11-01", "mainEntityOfPage": "https://teplo-schet.ru/rashod-gaza-v-sutki.html", "publisher": {"@type": "Organization", "name": "Теплосчёт"}}</script>
 <!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-m[i].l=1*new Date();
-for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113983509', 'ym');
-ym(113983509, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+<script>
+(function(){
+  var KEY='ts-cookie-consent', ID=113983509;
+  function get(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function set(v){ try{ localStorage.setItem(KEY,v); }catch(e){} }
+  function loadYM(){
+    if(window.__ymLoaded) return; window.__ymLoaded=true;
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
+    for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+    k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id='+ID,'ym');
+    ym(ID,'init',{ssr:true,webvisor:false,clickmap:true,accurateTrackBounce:true,trackLinks:true});
+  }
+  function banner(){
+    if(document.getElementById('cookie-bar')) return;
+    var css=document.createElement('style');
+    css.textContent='#cookie-bar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:760px;margin:0 auto;display:flex;gap:16px;align-items:center;padding:16px 18px;border:1px solid var(--line,#2a2540);border-radius:16px;background:linear-gradient(160deg,#1c1324,#110f1b 60%);box-shadow:0 18px 50px rgba(0,0,0,.55);color:var(--ink,#f2edf8);font:14px/1.5 var(--f-body,system-ui,sans-serif)}'+
+    '#cookie-bar p{margin:0;flex:1;color:var(--muted,#9d96b4)}#cookie-bar a{color:var(--warm,#ffd34d)}'+
+    '#cookie-bar .cb-btns{display:flex;gap:8px;flex-shrink:0}'+
+    '#cookie-bar button{font:600 14px/1 var(--f-body,system-ui,sans-serif);padding:11px 16px;border-radius:11px;cursor:pointer;border:1px solid var(--line,#2a2540);background:transparent;color:var(--ink,#f2edf8)}'+
+    '#cookie-bar button.cb-ok{border:0;background:linear-gradient(92deg,var(--warm,#ffd34d),var(--hot,#ff8a2a));color:#1a0d00}'+
+    '#cookie-bar button:focus-visible{outline:2px solid var(--warm,#ffd34d);outline-offset:2px}'+
+    '@media (max-width:600px){#cookie-bar{flex-direction:column;align-items:stretch;left:12px;right:12px;bottom:12px}#cookie-bar .cb-btns button{flex:1}}';
+    document.head.appendChild(css);
+    var d=document.createElement('div'); d.id='cookie-bar'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Согласие на cookie');
+    d.innerHTML='<p>Сайт использует cookie и Яндекс Метрику, чтобы считать посещения. Подробнее — в <a href="privacy.html">политике конфиденциальности</a>.</p><div class="cb-btns"><button type="button" class="cb-no">Отказаться</button><button type="button" class="cb-ok">Принять</button></div>';
+    document.body.appendChild(d);
+    d.querySelector('.cb-ok').onclick=function(){ set('yes'); d.remove(); loadYM(); };
+    d.querySelector('.cb-no').onclick=function(){ set('no'); d.remove(); };
+  }
+  window.tsCookieReset=function(){ try{ localStorage.removeItem(KEY); }catch(e){} banner(); };
+  var c=get();
+  if(c==='yes') loadYM();
+  else if(c!=='no'){ if(document.body) banner(); else document.addEventListener('DOMContentLoaded',banner); }
+})();
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/113983509" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
 </head>
 <body>
@@ -69,6 +96,6 @@ ym(113983509, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLa
 <div class="more"><span class="crumbs" style="margin:0">Ещё по теме</span><a href="oshibki-kotla-baxi.html">Ошибки газового котла Baxi: расшифровка кодов и что делать →</a><a href="kak-vybrat-gazovyy-kotel.html">Как выбрать газовый котёл для частного дома →</a><a href="oshibki-kotla-navien.html">Ошибки газового котла Navien: расшифровка кодов и что делать →</a><a href="skolko-stoit-provesti-gaz.html">Сколько стоит провести газ в частный дом в 2026 году →</a></div>
 </article>
 </main>
-<footer><div class="wrap"><span>Расчёты оценочные, точность около ±20%. Климат по СП 131.13330.2025 «Строительная климатология». Тарифы берите из своих квитанций.</span><span>© Теплосчёт, 2026</span></div></footer>
+<footer><div class="wrap"><span>Расчёты оценочные, точность около ±20%. Климат по СП 131.13330.2025 «Строительная климатология». Тарифы берите из своих квитанций.</span><span>© Теплосчёт, 2026 · <a href="privacy.html">Политика конфиденциальности</a></span></div></footer>
 </body>
 </html>
