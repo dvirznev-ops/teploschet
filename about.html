@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>О сайте — Теплосчёт</title>
+<meta name="description" content="Что такое Теплосчёт: как считается расход газа, откуда данные в статьях и кто делает сайт.">
+<link rel="canonical" href="https://teplo-schet.ru/about.html">
+<meta name="theme-color" content="#08070e">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="О сайте — Теплосчёт">
+<meta property="og:url" content="https://teplo-schet.ru/about.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='60%25' r='50%25'%3E%3Cstop offset='0' stop-color='%23fffbe6'/%3E%3Cstop offset='.25' stop-color='%23ffe15a'/%3E%3Cstop offset='.5' stop-color='%23ff8a2a'/%3E%3Cstop offset='.75' stop-color='%23be1e6e'/%3E%3Cstop offset='1' stop-color='%231e0a5c'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600;700&family=Unbounded:wght@700;800&display=swap">
+<link rel="stylesheet" href="article.css">
+<!-- Yandex.Metrika counter -->
+<script>
+(function(){
+  var KEY='ts-cookie-consent', ID=113983509;
+  function get(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function set(v){ try{ localStorage.setItem(KEY,v); }catch(e){} }
+  function loadYM(){
+    if(window.__ymLoaded) return; window.__ymLoaded=true;
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
+    for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+    k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id='+ID,'ym');
+    ym(ID,'init',{ssr:true,webvisor:false,clickmap:true,accurateTrackBounce:true,trackLinks:true});
+  }
+  function banner(){
+    if(document.getElementById('cookie-bar')) return;
+    var css=document.createElement('style');
+    css.textContent='#cookie-bar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:760px;margin:0 auto;display:flex;gap:16px;align-items:center;padding:16px 18px;border:1px solid var(--line,#2a2540);border-radius:16px;background:linear-gradient(160deg,#1c1324,#110f1b 60%);box-shadow:0 18px 50px rgba(0,0,0,.55);color:var(--ink,#f2edf8);font:14px/1.5 var(--f-body,system-ui,sans-serif)}'+
+    '#cookie-bar p{margin:0;flex:1;color:var(--muted,#9d96b4)}#cookie-bar a{color:var(--warm,#ffd34d)}'+
+    '#cookie-bar .cb-btns{display:flex;gap:8px;flex-shrink:0}'+
+    '#cookie-bar button{font:600 14px/1 var(--f-body,system-ui,sans-serif);padding:11px 16px;border-radius:11px;cursor:pointer;border:1px solid var(--line,#2a2540);background:transparent;color:var(--ink,#f2edf8)}'+
+    '#cookie-bar button.cb-ok{border:0;background:linear-gradient(92deg,var(--warm,#ffd34d),var(--hot,#ff8a2a));color:#1a0d00}'+
+    '#cookie-bar button:focus-visible{outline:2px solid var(--warm,#ffd34d);outline-offset:2px}'+
+    '@media (max-width:600px){#cookie-bar{flex-direction:column;align-items:stretch;left:12px;right:12px;bottom:12px}#cookie-bar .cb-btns button{flex:1}}';
+    document.head.appendChild(css);
+    var d=document.createElement('div'); d.id='cookie-bar'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Согласие на cookie');
+    d.innerHTML='<p>Сайт использует cookie и Яндекс Метрику, чтобы считать посещения. Подробнее — в <a href="privacy.html">политике конфиденциальности</a>.</p><div class="cb-btns"><button type="button" class="cb-no">Отказаться</button><button type="button" class="cb-ok">Принять</button></div>';
+    document.body.appendChild(d);
+    d.querySelector('.cb-ok').onclick=function(){ set('yes'); d.remove(); loadYM(); };
+    d.querySelector('.cb-no').onclick=function(){ set('no'); d.remove(); };
+  }
+  window.tsCookieReset=function(){ try{ localStorage.removeItem(KEY); }catch(e){} banner(); };
+  var c=get();
+  if(c==='yes') loadYM();
+  else if(c!=='no'){ if(document.body) banner(); else document.addEventListener('DOMContentLoaded',banner); }
+})();
+</script>
+<!-- /Yandex.Metrika counter -->
+</head>
+<body>
+<header class="top wrap">
+  <a class="logo" href="./"><i aria-hidden="true"></i><b>Тепло<span>счёт</span></b></a>
+  <nav aria-label="Разделы"><a href="./#calc">Калькулятор</a><a href="./#articles">Статьи</a><a href="about.html">О сайте</a></nav>
+</header>
+<main class="wrap">
+<article>
+<p class="crumbs"><a href="./">Теплосчёт</a> / О сайте</p>
+
+<h1>О сайте</h1>
+<p class="lead"><strong>Теплосчёт</strong> — бесплатный калькулятор расхода газа и справочник для владельцев частных домов с газовым котлом.</p>
+
+<h2>Зачем он нужен</h2>
+<p>Зимняя квитанция за газ часто удивляет, а большинство калькуляторов в интернете считают по правилу «1 кВт на 10 м²» и не учитывают ни климат, ни утепление дома. Мы хотели сделать расчёт, которому можно доверять: с морозами и длиной отопительного сезона именно вашего города.</p>
+
+<h2>Как мы считаем</h2>
+<p>Расход газа считается по инженерной методике: теплопотери дома умножаются на градусо-сутки отопительного периода вашего города, а потом переводятся в кубометры газа с учётом КПД котла. Климатические данные взяты из свода правил СП 131.13330.2025 «Строительная климатология».</p>
+<p>Точность расчёта — около ±20%: реальный расход зависит от привычек, погоды конкретной зимы и состояния котла. Подробно методика расписана <a href="./#method">на главной странице</a>.</p>
+
+<h2>Откуда информация в статьях</h2>
+<ul>
+<li>климат — СП 131.13330.2025;</li>
+<li>коды ошибок котлов — инструкции и официальные сайты производителей;</li>
+<li>цены и тарифы — открытые данные поставщиков и государственных программ, с указанием года.</li>
+</ul>
+
+<h2>Чего мы не делаем</h2>
+<ul>
+<li>Не продаём котлы и не берём деньги за упоминание брендов.</li>
+<li>Не собираем личные данные: калькулятор работает прямо в браузере.</li>
+<li>Не заменяем газовую службу и сервисный центр. Если пахнет газом, звоните <strong>104</strong> или <strong>112</strong>.</li>
+</ul>
+
+<h2>Кто делает сайт</h2>
+<p>Сайт делает Владимир из Новосибирска — города, где отопительный сезон длится 220 дней, а морозы доходят до −36 °C.</p>
+
+<h2>Нашли ошибку?</h2>
+<p>Напишите на <a href="mailto:revas8154@gmail.com">revas8154@gmail.com</a>, исправим. Статьи регулярно обновляются, когда меняются данные.</p>
+
+<div class="cta"><b>Посчитайте расход газа для своего дома</b><a class="btn" href="./#calc">Открыть калькулятор</a></div>
+</article>
+</main>
+<footer><div class="wrap"><span>Расчёты оценочные, точность около ±20%.</span><span>© Теплосчёт, 2026 · <a href="about.html">О сайте</a> · <a href="privacy.html">Политика конфиденциальности</a></span></div></footer>
+</body>
+</html>
