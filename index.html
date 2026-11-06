@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Теплосчёт — калькулятор расхода газа котлом</title>
 <meta name="description" content="Калькулятор расхода газа котлом: сколько кубометров и рублей уйдёт на отопление дома за сезон с учётом климата вашего города.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap">
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="canonical" href="https://teplo-schet.ru/">
 <meta name="theme-color" content="#08070e">
 <meta property="og:type" content="website">
@@ -63,6 +62,9 @@
 
 
 <style>
+@font-face{font-family:'Onest';src:url('font-onest.woff') format('woff');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Unbounded';src:url('font-unbounded.woff') format('woff');font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('font-jetbrainsmono.woff') format('woff');font-weight:100 800;font-style:normal;font-display:swap}
 /* Layout: интерфейс тепловизора — слева пульт с параметрами дома, справа живой ИК-снимок и итог; ниже сравнение топлива, открытая методика, вопросы */
 :root{
   --bg:#08070e;
